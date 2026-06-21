@@ -1,0 +1,16 @@
+Django==4.2.7
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+python-decouple==3.8
+celery==5.3.4
+redis==5.0.1
+requests==2.31.0
+librosa==0.10.1
+numpy==1.24.3
+torch==2.1.0
+soundfile==0.12.1
+pydub==0.25.1
+pandas==2.0.3
+TTS==0.20.6
+bark==1.0.0
+Pillow==10.0.1

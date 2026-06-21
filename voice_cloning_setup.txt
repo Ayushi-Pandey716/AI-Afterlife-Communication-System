@@ -1,0 +1,81 @@
+======================================================
+     VOICE CLONING SETUP GUIDE (AI-After-Life)
+======================================================
+
+This guide assumes you have the project code and just need to install the dependencies for voice cloning (TTS, Bark, PyTorch) on different platforms.
+Python 3.9 or 3.10 is highly recommended for compatibility with TTS and Bark.
+
+------------------------------------------------------
+1. WINDOWS SETUP
+------------------------------------------------------
+Prerequisites:
+- Install Python 3.10 (Make sure to check "Add Python to PATH" during installation)
+- Visual Studio Build Tools (Required for compiling certain audio libraries):
+  Download from Microsoft, select "Desktop development with C++" workload.
+- FFmpeg (Required for audio processing like pydub):
+  Open Command Prompt as Administrator and run:
+  `winget install ffmpeg`
+
+Step-by-step:
+1. Open Command Prompt or PowerShell in the project directory.
+2. Create a virtual environment:
+   python -m venv venv
+3. Activate the virtual environment:
+   venv\Scripts\activate
+4. Install PyTorch with CUDA (for Nvidia GPUs) for faster processing:
+   pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+   (If you do not have an Nvidia GPU, use: pip install torch)
+5. Install the remaining requirements:
+   pip install -r requirements.txt
+
+------------------------------------------------------
+2. LINUX SETUP (Ubuntu/Debian)
+------------------------------------------------------
+Prerequisites:
+- System packages for audio and building:
+  Open terminal and run:
+  sudo apt update
+  sudo apt install python3 python3-pip python3-venv ffmpeg libsndfile1 build-essential
+
+Step-by-step:
+1. Open Terminal in the project directory.
+2. Create a virtual environment:
+   python3 -m venv venv
+3. Activate the virtual environment:
+   source venv/bin/activate
+4. Install PyTorch with CUDA (if you have an Nvidia GPU):
+   pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+   (If you do not have an Nvidia GPU, use: pip install torch)
+5. Install the remaining requirements:
+   pip install -r requirements.txt
+
+------------------------------------------------------
+3. MAC (macOS) SETUP
+------------------------------------------------------
+Prerequisites:
+- Homebrew (Package manager for Mac):
+  Install from https://brew.sh/ if not already installed.
+- System packages:
+  Open Terminal and run:
+  brew install python@3.10 ffmpeg
+
+Step-by-step:
+1. Open Terminal in the project directory.
+2. Create a virtual environment:
+   python3 -m venv venv
+3. Activate the virtual environment:
+   source venv/bin/activate
+4. Install PyTorch (Mac Silicon/M1/M2/M3 uses MPS, which is included in the default PyTorch install):
+   pip3 install torch torchvision torchaudio
+5. Install the remaining requirements:
+   pip install -r requirements.txt
+
+------------------------------------------------------
+TROUBLESHOOTING
+------------------------------------------------------
+- "espeak not found" or TTS errors: TTS requires `espeak` or `espeak-ng`.
+  Windows: Download and install eSpeak-NG (https://github.com/espeak-ng/espeak-ng/releases)
+  Linux: `sudo apt install espeak-ng`
+  Mac: `brew install espeak`
+- If you face issues with `pydub`, ensure `ffmpeg` is correctly added to your system's PATH.
+- If Bark or TTS runs out of memory (OOM), close other applications as these models require significant RAM/VRAM.

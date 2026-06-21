@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <style>
+    .box { fill: #f0f8ff; stroke: #2a5298; stroke-width: 2; }
+    .arrow { stroke: #1e3c72; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .label { font-family: Arial; font-size: 12px; fill: #333; }
+    .title { font-family: Arial; font-size: 16px; font-weight: bold; fill: #1e3c72; }
+    .process { fill: #e6f3ff; }
+    .user { fill: #e6ffe6; }
+    .server { fill: #ffe6e6; }
+  </style>
+  
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#1e3c72" />
+    </marker>
+  </defs>
+  
+  <text x="400" y="30" text-anchor="middle" class="title">Voice Conversation Flow</text>
+  
+  <!-- User Section -->
+  <rect x="50" y="70" width="200" height="80" rx="10" class="box user" />
+  <text x="150" y="110" text-anchor="middle" class="title">User</text>
+  <text x="150" y="130" text-anchor="middle" class="label">Speaks into microphone</text>
+  
+  <!-- Browser Section -->
+  <rect x="300" y="70" width="200" height="450" rx="10" class="box process" />
+  <text x="400" y="90" text-anchor="middle" class="title">Browser</text>
+  
+  <!-- Speech Recognition -->
+  <rect x="320" y="110" width="160" height="60" rx="5" class="box" />
+  <text x="400" y="140" text-anchor="middle" class="label">Web Speech API</text>
+  <text x="400" y="155" text-anchor="middle" class="label">Speech Recognition</text>
+  
+  <!-- Text Processing -->
+  <rect x="320" y="200" width="160" height="60" rx="5" class="box" />
+  <text x="400" y="230" text-anchor="middle" class="label">Convert Speech to Text</text>
+  <text x="400" y="245" text-anchor="middle" class="label">Display in Chat UI</text>
+  
+  <!-- Send to Server -->
+  <rect x="320" y="290" width="160" height="60" rx="5" class="box" />
+  <text x="400" y="320" text-anchor="middle" class="label">Send Text to Server</text>
+  <text x="400" y="335" text-anchor="middle" class="label">via Fetch API</text>
+  
+  <!-- Receive Response -->
+  <rect x="320" y="380" width="160" height="60" rx="5" class="box" />
+  <text x="400" y="410" text-anchor="middle" class="label">Receive AI Response</text>
+  <text x="400" y="425" text-anchor="middle" class="label">Display in Chat UI</text>
+  
+  <!-- Text-to-Speech -->
+  <rect x="320" y="470" width="160" height="60" rx="5" class="box" />
+  <text x="400" y="500" text-anchor="middle" class="label">Web Speech API</text>
+  <text x="400" y="515" text-anchor="middle" class="label">Speech Synthesis</text>
+  
+  <!-- Server Section -->
+  <rect x="550" y="70" width="200" height="450" rx="10" class="box server" />
+  <text x="650" y="90" text-anchor="middle" class="title">Django Server</text>
+  
+  <!-- Process Request -->
+  <rect x="570" y="110" width="160" height="60" rx="5" class="box" />
+  <text x="650" y="140" text-anchor="middle" class="label">Receive Text Message</text>
+  <text x="650" y="155" text-anchor="middle" class="label">from Browser</text>
+  
+  <!-- AI Processing -->
+  <rect x="570" y="200" width="160" height="60" rx="5" class="box" />
+  <text x="650" y="230" text-anchor="middle" class="label">Process with AI</text>
+  <text x="650" y="245" text-anchor="middle" class="label">Generate Response</text>
+  
+  <!-- Voice Generation -->
+  <rect x="570" y="290" width="160" height="60" rx="5" class="box" />
+  <text x="650" y="320" text-anchor="middle" class="label">Generate Voice</text>
+  <text x="650" y="335" text-anchor="middle" class="label">with TTS Engine</text>
+  
+  <!-- Save Response -->
+  <rect x="570" y="380" width="160" height="60" rx="5" class="box" />
+  <text x="650" y="410" text-anchor="middle" class="label">Save Message</text>
+  <text x="650" y="425" text-anchor="middle" class="label">& Voice File</text>
+  
+  <!-- Send Response -->
+  <rect x="570" y="470" width="160" height="60" rx="5" class="box" />
+  <text x="650" y="500" text-anchor="middle" class="label">Send Response</text>
+  <text x="650" y="515" text-anchor="middle" class="label">to Browser</text>
+  
+  <!-- Arrows -->
+  <!-- User to Browser -->
+  <path d="M 250 110 H 320" class="arrow" />
+  
+  <!-- Browser Internal Flow -->
+  <path d="M 400 170 V 200" class="arrow" />
+  <path d="M 400 260 V 290" class="arrow" />
+  <path d="M 400 350 V 380" class="arrow" />
+  <path d="M 400 440 V 470" class="arrow" />
+  
+  <!-- Browser to Server -->
+  <path d="M 480 320 H 570" class="arrow" />
+  
+  <!-- Server Internal Flow -->
+  <path d="M 650 170 V 200" class="arrow" />
+  <path d="M 650 260 V 290" class="arrow" />
+  <path d="M 650 350 V 380" class="arrow" />
+  <path d="M 650 440 V 470" class="arrow" />
+  
+  <!-- Server to Browser -->
+  <path d="M 570 500 H 480" class="arrow" />
+  
+  <!-- Browser to User (Audio) -->
+  <path d="M 320 500 H 150 V 150" class="arrow" />
+</svg>

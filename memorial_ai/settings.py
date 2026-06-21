@@ -130,7 +130,7 @@ import os
 from decouple import config
 
 # Add Groq configuration
-GROQ_API_KEY = "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"
+GROQ_API_KEY = ""
 GROQ_MODEL_NAME = "openai/gpt-oss-20b" 
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 

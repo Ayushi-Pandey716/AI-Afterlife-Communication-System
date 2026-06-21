@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <div class="glass-effect p-4 mb-4">
+            <h1><i class="fas fa-heart"></i> Your Memorial Personas</h1>
+            <p class="lead">Create and interact with AI representations of your loved ones</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="glass-effect p-4 text-center h-100">
+                    <i class="fas fa-plus-circle fa-3x mb-3"></i>
+                    <h4>Create New Persona</h4>
+                    <p>Start by creating a new memorial persona for your loved one</p>
+                    <a href="{% url 'create_persona' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Persona
+                    </a>
+                </div>
+            </div>
+
+            {% for persona in personas %}
+            <div class="col-md-4 mb-4">
+                <div class="glass-effect p-4 h-100 persona-card">
+                    <h5><i class="fas fa-user"></i> {{ persona.name }}</h5>
+                    <p class="text-muted">{{ persona.relationship }}</p>
+                    <p><small>Created: {{ persona.created_at|date:"M d, Y" }}</small></p>
+                    
+                    <!-- Training Status Badge -->
+                    {% if persona.is_trained %}
+                        <span class="badge bg-success mb-2">
+                            <i class="fas fa-check"></i> Trained
+                        </span>
+                    {% elif persona.training_status == 'in_progress' %}
+                        <span class="badge bg-info mb-2">
+                            <i class="fas fa-spinner fa-spin"></i> Training...
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning mb-2">
+                            <i class="fas fa-clock"></i> Training Needed
+                        </span>
+                    {% endif %}
+
+                    <!-- Accuracy display (only when trained) -->
+                    {% if persona.is_trained and persona.training_accuracy %}
+                    <div class="accuracy-card mt-2 mb-2 p-2">
+                        <div class="accuracy-card-title mb-1">
+                            <i class="fas fa-chart-bar me-1"></i>
+                            <small><strong>Training Accuracy</strong></small>
+                        </div>
+
+                        {% if persona.training_accuracy.whatsapp_accuracy is not None %}
+                        <div class="acc-row">
+                            <span class="acc-label"><i class="fas fa-comments me-1"></i>WhatsApp</span>
+                            <div class="acc-bar-wrap">
+                                <div class="acc-bar-fill" style="width:{{ persona.training_accuracy.whatsapp_accuracy }}%"></div>
+                            </div>
+                            <span class="acc-val">{{ persona.training_accuracy.whatsapp_accuracy }}%</span>
+                        </div>
+                        {% endif %}
+
+                        {% if persona.training_accuracy.voice_accuracy is not None %}
+                        <div class="acc-row">
+                            <span class="acc-label"><i class="fas fa-microphone me-1"></i>Voice</span>
+                            <div class="acc-bar-wrap">
+                                <div class="acc-bar-fill" style="width:{{ persona.training_accuracy.voice_accuracy }}%"></div>
+                            </div>
+                            <span class="acc-val">{{ persona.training_accuracy.voice_accuracy }}%</span>
+                        </div>
+                        {% endif %}
+
+                        {% if persona.training_accuracy.overall_accuracy is not None %}
+                        <div class="acc-row overall">
+                            <span class="acc-label"><i class="fas fa-brain me-1"></i><strong>Overall</strong></span>
+                            <div class="acc-bar-wrap">
+                                <div class="acc-bar-fill overall-fill" style="width:{{ persona.training_accuracy.overall_accuracy }}%"></div>
+                            </div>
+                            <span class="acc-val overall-val">{{ persona.training_accuracy.overall_accuracy }}%</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="mt-3">
+                        {% if persona.is_trained %}
+                            <a href="{% url 'chat_interface' persona.id %}" class="btn btn-success btn-sm">
+                                <i class="fas fa-comments"></i> Chat
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'upload_data' persona.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-upload"></i> Add Data
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-md-8">
+                <div class="glass-effect p-4 text-center">
+                    <i class="fas fa-heart-broken fa-3x mb-3 text-muted"></i>
+                    <h4>No personas created yet</h4>
+                    <p>Create your first memorial persona to get started</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* ── Persona Card Accuracy Mini Display ──── */
+.persona-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.persona-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+
+.accuracy-card {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+.accuracy-card-title { color: rgba(255,255,255,0.75); font-size: 0.78rem; }
+
+.acc-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    font-size: 0.75rem;
+}
+
+.acc-label {
+    width: 72px;
+    flex-shrink: 0;
+    color: rgba(255,255,255,0.75);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.acc-bar-wrap {
+    flex: 1;
+    height: 5px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.acc-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #17a2b8);
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
+
+.overall-fill {
+    background: linear-gradient(90deg, #6610f2, #007bff);
+}
+
+.acc-val { width: 34px; text-align: right; color: #fff; font-size: 0.75rem; }
+.overall { border-top: 1px solid rgba(255,255,255,0.15); padding-top: 4px; margin-top: 4px; }
+.overall-val { color: #7effc0; font-weight: bold; }
+</style>
+{% endblock %}

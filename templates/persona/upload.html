@@ -1,0 +1,448 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="glass-effect p-4 mb-4">
+            <h2><i class="fas fa-upload"></i> Upload Data for {{ persona.name }}</h2>
+            <p class="text-muted">Upload WhatsApp chats or voice recordings to train the AI</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="glass-effect p-4 h-100">
+                    <h4><i class="fas fa-comments"></i> WhatsApp Chat</h4>
+                    <p>Upload exported WhatsApp chat files to analyze communication patterns</p>
+                    
+                    <form method="post" enctype="multipart/form-data" id="whatsappForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="upload_type" value="whatsapp">
+                        <div class="mb-3">
+                            <input type="file" class="form-control" name="file" accept=".txt" required>
+                            <div class="form-text">Export chat from WhatsApp (without media)</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Upload Chat
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="glass-effect p-4 h-100">
+                    <h4><i class="fas fa-microphone"></i> Voice Recording</h4>
+                    <p>Upload voice recordings to clone their voice characteristics</p>
+                    
+                    <form method="post" enctype="multipart/form-data" id="voiceForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="upload_type" value="voice">
+                        <div class="mb-3">
+                            <input type="file" class="form-control" name="file" accept=".wav,.mp3,.m4a" required>
+                            <div class="form-text">Clear voice recording (WAV, MP3, or M4A)</div>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-upload"></i> Upload Voice
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-effect p-4">
+            <h4><i class="fas fa-list"></i> Uploaded Data</h4>
+            {% if uploads %}
+                <div class="table-responsive">
+                    <table class="table table-dark">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>File</th>
+                                <th>Status</th>
+                                <th>Uploaded</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for upload in uploads %}
+                            <tr>
+                                <td>
+                                    {% if upload.upload_type == 'whatsapp' %}
+                                        <i class="fas fa-comments"></i> WhatsApp
+                                    {% else %}
+                                        <i class="fas fa-microphone"></i> Voice
+                                    {% endif %}
+                                </td>
+                                <td>{{ upload.file.name }}</td>
+                                <td>
+                                    {% if upload.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% elif upload.status == 'failed' %}
+                                        <span class="badge bg-danger" title="{{ upload.error_message }}">Failed</span>
+                                    {% elif upload.status == 'processing' %}
+                                        <span class="badge bg-info">Processing</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ upload.uploaded_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No data uploaded yet</p>
+            {% endif %}
+            
+            <div class="mt-3">
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                {% if persona.is_trained %}
+                    <a href="{% url 'chat_interface' persona.id %}" class="btn btn-success">
+                        <i class="fas fa-comments"></i> Start Chatting
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ════════ AI Training Card ════════ -->
+        <div class="glass-effect p-4 mt-4" id="training-card">
+            <h4><i class="fas fa-brain"></i> AI Training</h4>
+            
+            {% if uploads %}
+                <div class="row align-items-start">
+                    <div class="col-md-8">
+                        <p class="mb-2">Train the AI with your uploaded data to create a personalized persona.</p>
+                        
+                        <!-- Training Status Badge -->
+                        <div class="mb-3">
+                            <strong>Status: </strong>
+                            {% if persona.training_status == 'not_started' %}
+                                <span class="badge bg-secondary">Ready to Train</span>
+                            {% elif persona.training_status == 'in_progress' %}
+                                <span class="badge bg-info"><i class="fas fa-spinner fa-spin me-1"></i>Training in Progress</span>
+                            {% elif persona.training_status == 'completed' %}
+                                <span class="badge bg-success">Training Completed</span>
+                            {% elif persona.training_status == 'failed' %}
+                                <span class="badge bg-danger">Training Failed</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Progress Bar (visible during/after training) -->
+                        {% if persona.training_status == 'in_progress' or persona.training_status == 'completed' %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Training Progress</span>
+                                <span id="training-progress-pct">{{ persona.training_progress }}%</span>
+                            </div>
+                            <div class="progress" style="height:8px;">
+                                <div class="progress-bar progress-bar-striped {% if persona.training_status == 'in_progress' %}progress-bar-animated{% endif %} bg-success"
+                                     role="progressbar"
+                                     style="width: {{ persona.training_progress }}%"
+                                     id="training-progress-bar">
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4 text-end">
+                        {% if persona.training_status == 'not_started' or persona.training_status == 'failed' %}
+                            <button class="btn btn-warning" id="start-training-btn"
+                                onclick="startTrainingWithChat({{ persona.id }}, '{{ csrf_token }}', 'training-chat-feed')">
+                                <i class="fas fa-play"></i> Start Training
+                            </button>
+                        {% elif persona.training_status == 'in_progress' %}
+                            <button class="btn btn-secondary" disabled>
+                                <i class="fas fa-spinner fa-spin"></i> Training...
+                            </button>
+                        {% elif persona.training_status == 'completed' %}
+                            <button class="btn btn-info" id="start-training-btn"
+                                onclick="startTrainingWithChat({{ persona.id }}, '{{ csrf_token }}', 'training-chat-feed')">
+                                <i class="fas fa-redo"></i> Retrain
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- ══ CHAT-STYLE TRAINING FEED ══════════════════════════════ -->
+                <div id="training-chat-section"
+                     class="{% if persona.training_status == 'not_started' %}d-none{% endif %} mt-3">
+                    <div class="training-chat-header mb-2">
+                        <i class="fas fa-robot me-2"></i>
+                        <strong>Training Log</strong>
+                        <span class="text-muted ms-2" style="font-size:0.82rem;">Live updates</span>
+                    </div>
+                    <div id="training-chat-feed" class="training-chat-container p-2"></div>
+                </div>
+
+                <!-- Show saved accuracy after training completes (on page reload) -->
+                {% if persona.training_status == 'completed' and persona.training_accuracy %}
+                <div class="mt-3">
+                    <div class="training-bubble training-bubble-accuracy p-3">
+                        <div class="accuracy-title">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            <strong>Training Complete! Accuracy Report</strong>
+                        </div>
+                        <hr class="my-2">
+                        {% if persona.training_accuracy.whatsapp_accuracy is not None %}
+                        <div class="accuracy-row">
+                            <span><i class="fas fa-comments me-1"></i> WhatsApp Chat</span>
+                            <span class="ms-auto d-flex align-items-center gap-2">
+                                <div class="mini-progress-bar">
+                                    <div class="mini-progress-fill" style="width:{{ persona.training_accuracy.whatsapp_accuracy }}%"></div>
+                                </div>
+                                <strong>{{ persona.training_accuracy.whatsapp_accuracy }}%</strong>
+                            </span>
+                        </div>
+                        {% if persona.training_accuracy.whatsapp_confusion_matrix %}
+                        {% with cm=persona.training_accuracy.whatsapp_confusion_matrix %}
+                        <div class="cm-table mt-2 mb-1">
+                            <div class="cm-header"></div>
+                            <div class="cm-header">Pred +</div>
+                            <div class="cm-header">Pred −</div>
+                            <div class="cm-label">Actual +</div>
+                            <div class="cm-cell cm-tp">TP<br><span class="cm-val">{{ cm.TP }}</span></div>
+                            <div class="cm-cell cm-fn">FN<br><span class="cm-val">{{ cm.FN }}</span></div>
+                            <div class="cm-label">Actual −</div>
+                            <div class="cm-cell cm-fp">FP<br><span class="cm-val">{{ cm.FP }}</span></div>
+                            <div class="cm-cell cm-tn">TN<br><span class="cm-val">{{ cm.TN }}</span></div>
+                        </div>
+                        {% endwith %}
+                        {% endif %}
+                        {% endif %}
+                        {% if persona.training_accuracy.voice_accuracy is not None %}
+                        <div class="accuracy-row mt-2">
+                            <span><i class="fas fa-microphone me-1"></i> Voice Recording</span>
+                            <span class="ms-auto d-flex align-items-center gap-2">
+                                <div class="mini-progress-bar">
+                                    <div class="mini-progress-fill" style="width:{{ persona.training_accuracy.voice_accuracy }}%"></div>
+                                </div>
+                                <strong>{{ persona.training_accuracy.voice_accuracy }}%</strong>
+                            </span>
+                        </div>
+                        {% if persona.training_accuracy.voice_confusion_matrix %}
+                        {% with cm=persona.training_accuracy.voice_confusion_matrix %}
+                        <div class="cm-table mt-2 mb-1">
+                            <div class="cm-header"></div>
+                            <div class="cm-header">Pred +</div>
+                            <div class="cm-header">Pred −</div>
+                            <div class="cm-label">Actual +</div>
+                            <div class="cm-cell cm-tp">TP<br><span class="cm-val">{{ cm.TP }}</span></div>
+                            <div class="cm-cell cm-fn">FN<br><span class="cm-val">{{ cm.FN }}</span></div>
+                            <div class="cm-label">Actual −</div>
+                            <div class="cm-cell cm-fp">FP<br><span class="cm-val">{{ cm.FP }}</span></div>
+                            <div class="cm-cell cm-tn">TN<br><span class="cm-val">{{ cm.TN }}</span></div>
+                        </div>
+                        {% endwith %}
+                        {% endif %}
+                        {% endif %}
+                        {% if persona.training_accuracy.overall_accuracy is not None %}
+                        <div class="accuracy-row overall-row mt-2 pt-2">
+                            <span><i class="fas fa-brain me-1"></i> <strong>Overall Accuracy</strong></span>
+                            <span class="ms-auto">
+                                <strong class="accuracy-percent">{{ persona.training_accuracy.overall_accuracy }}%</strong>
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% if persona.training_accuracy.messages_analyzed %}
+                        <div class="accuracy-detail mt-1">
+                            <small><i class="fas fa-envelope me-1"></i>{{ persona.training_accuracy.messages_analyzed }} messages analysed</small>
+                        </div>
+                        {% endif %}
+                        {% if persona.training_accuracy.voice_features %}
+                        <div class="accuracy-detail">
+                            <small><i class="fas fa-wave-square me-1"></i>{{ persona.training_accuracy.voice_features }} voice features extracted</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                <!-- ════════════════════════════════════════════════════════ -->
+
+            {% else %}
+                <p class="text-muted">Upload some data first to start training the AI.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'persona/js/chat.js' %}"></script>
+<style>
+/* ── Training Chat Styles ─────────────────────────────────── */
+.training-chat-container {
+    height: 280px;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.25);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.12);
+    scroll-behavior: smooth;
+}
+
+.training-chat-header {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.8);
+}
+
+/* Individual bubble */
+.training-bubble {
+    display: inline-block;
+    max-width: 90%;
+    border-radius: 14px;
+    font-size: 0.88rem;
+    animation: bubbleIn 0.25s ease;
+}
+
+@keyframes bubbleIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.training-message-wrapper {
+    display: flex;
+}
+
+.training-bubble-ai {
+    background: rgba(40, 167, 69, 0.28);
+    border: 1px solid rgba(40, 167, 69, 0.4);
+    color: #d4edda;
+    margin-right: auto;
+}
+
+.training-bubble-system {
+    background: rgba(0, 123, 255, 0.22);
+    border: 1px solid rgba(0, 123, 255, 0.4);
+    color: #cce5ff;
+    margin-right: auto;
+}
+
+.training-bubble-success {
+    background: rgba(40, 167, 69, 0.4);
+    border: 1px solid rgba(40, 167, 69, 0.6);
+    color: #d4edda;
+    margin-right: auto;
+}
+
+.training-bubble-error {
+    background: rgba(220, 53, 69, 0.3);
+    border: 1px solid rgba(220, 53, 69, 0.5);
+    color: #f8d7da;
+    margin-right: auto;
+}
+
+/* Accuracy result bubble */
+.training-bubble-accuracy {
+    background: linear-gradient(135deg, rgba(102,16,242,0.35) 0%, rgba(0,123,255,0.25) 100%);
+    border: 1px solid rgba(102,16,242,0.5);
+    border-radius: 14px;
+    color: #fff;
+    width: 100%;
+    animation: bubbleIn 0.3s ease;
+}
+
+.accuracy-title { font-size: 0.95rem; }
+
+.accuracy-row {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.mini-progress-bar {
+    width: 80px;
+    height: 6px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-right: 6px;
+}
+
+.mini-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #17a2b8);
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
+
+.overall-row {
+    border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.accuracy-percent {
+    font-size: 1.2rem;
+    color: #7effc0;
+}
+
+.accuracy-detail {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.65);
+}
+
+/* ── Confusion Matrix Grid ────────────────────────────── */
+.cm-table {
+    display: grid;
+    grid-template-columns: 58px 1fr 1fr;
+    gap: 3px;
+    font-size: 0.72rem;
+}
+.cm-header {
+    text-align: center;
+    color: rgba(255,255,255,0.45);
+    padding: 2px 0;
+    font-size: 0.68rem;
+}
+.cm-label {
+    display: flex;
+    align-items: center;
+    color: rgba(255,255,255,0.45);
+    font-size: 0.68rem;
+    padding-right: 4px;
+}
+.cm-cell {
+    text-align: center;
+    padding: 5px 4px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.68rem;
+    line-height: 1.2;
+}
+.cm-val {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+.cm-tp { background: rgba(40, 167, 69, 0.30); color: #7effc0; }
+.cm-tn { background: rgba(40, 167, 69, 0.18); color: #7effc0; }
+.cm-fp { background: rgba(220, 53,  69, 0.22); color: #ffb3ba; }
+.cm-fn { background: rgba(255, 193,  7, 0.22); color: #ffe083; }
+</style>
+<script>
+document.getElementById('whatsappForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('button[type="submit"]');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    btn.disabled = true;
+    this.submit();
+});
+
+document.getElementById('voiceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('button[type="submit"]');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    btn.disabled = true;
+    this.submit();
+});
+
+// Auto-resume polling if training was already in progress when page loaded
+{% if persona.training_status == 'in_progress' %}
+document.addEventListener('DOMContentLoaded', function() {
+    const section = document.getElementById('training-chat-section');
+    if (section) section.classList.remove('d-none');
+    pollTrainingProgress({{ persona.id }}, '{{ csrf_token }}', 'training-chat-feed');
+});
+{% endif %}
+</script>
+{% endblock %}
